@@ -393,7 +393,7 @@ JNU_NewObjectByName(JNIEnv *env, const char *class_name,
 static jstring
 newSizedString8859_1(JNIEnv *env, const char *str, const int len)
 {
-    jchar buf[512] = {0};
+    jchar buf[512]; //= {0};
     jchar *str1;
     jstring result;
     int i;
@@ -409,6 +409,7 @@ newSizedString8859_1(JNIEnv *env, const char *str, const int len)
         }
     } else
         str1 = buf;
+    str1[0] = 0;
 
     for (i=0;i<len;i++)
         str1[i] = (unsigned char)str[i];
@@ -463,7 +464,7 @@ static jstring
 newString646_US(JNIEnv *env, const char *str)
 {
     int len = (int)strlen(str);
-    jchar buf[512] = {0};
+    jchar buf[512]; //= {0};
     jchar *str1;
     jstring result;
     int i;
@@ -479,6 +480,7 @@ newString646_US(JNIEnv *env, const char *str)
         }
     } else
         str1 = buf;
+    str1[0] = 0;
 
     for (i=0; i<len; i++) {
         unsigned char c = (unsigned char)str[i];
@@ -538,7 +540,7 @@ static jstring
 newStringCp1252(JNIEnv *env, const char *str)
 {
     int len = (int) strlen(str);
-    jchar buf[512] = {0};
+    jchar buf[512]; //= {0};
     jchar *str1;
     jstring result;
     int i;
@@ -554,6 +556,7 @@ newStringCp1252(JNIEnv *env, const char *str)
         }
     } else
         str1 = buf;
+    str1[0] = 0;
 
     for (i=0; i<len; i++) {
         unsigned char c = (unsigned char)str[i];
