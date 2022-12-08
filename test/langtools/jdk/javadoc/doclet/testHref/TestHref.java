@@ -44,7 +44,6 @@ public class TestHref extends JavadocTester {
     public void test() {
         javadoc("-Xdoclint:none",
                 "-d", "out",
-                "-source", "8",
                 "-sourcepath", testSrc,
                 "-linkoffline", "http://java.sun.com/j2se/1.4/docs/api/", testSrc,
                 "pkg");

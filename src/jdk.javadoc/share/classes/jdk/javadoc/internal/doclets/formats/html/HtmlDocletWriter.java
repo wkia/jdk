@@ -986,9 +986,10 @@ public class HtmlDocletWriter {
         }
 
         if (utils.isVariableElement(element) || utils.isTypeElement(element)) {
+            HtmlId id = htmlIds.forElement(element);
             return getLink(new HtmlLinkInfo(configuration, context, typeElement)
                 .label(label)
-                .where(element.getSimpleName().toString())
+                .where(id.name())
                 .style(style)
                 .targetMember(element));
         }

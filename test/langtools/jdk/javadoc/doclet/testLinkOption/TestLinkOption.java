@@ -63,7 +63,6 @@ public class TestLinkOption extends JavadocTester {
         String out1 = "out1";
         String url = "http://acme.com/jdk/";
         javadoc("-d", out1,
-                "-source", "8",
                 "-classpath", mylib,
                 "-sourcepath", testSrc,
                 "-linkoffline", url, testSrc + "/jdk",

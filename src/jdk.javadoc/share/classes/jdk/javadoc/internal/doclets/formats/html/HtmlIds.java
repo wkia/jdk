@@ -34,6 +34,7 @@ import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
+import javax.lang.model.SourceVersion;
 import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
@@ -133,7 +134,7 @@ public class HtmlIds {
     HtmlId forPackage(PackageElement element) {
         return element == null || element.isUnnamed()
                 ? UNNAMED_PACKAGE_ANCHOR
-                : HtmlId.of(element.getQualifiedName().toString());
+                : getHtmlId(element.getQualifiedName().toString());
     }
 
     /**
@@ -157,7 +158,7 @@ public class HtmlIds {
      * @return the id
      */
     HtmlId forClass(TypeElement element) {
-        return HtmlId.of(utils.getFullyQualifiedName(element));
+        return getHtmlId(utils.getFullyQualifiedName(element));
     }
 
     /**
@@ -173,7 +174,7 @@ public class HtmlIds {
         String a = element.getSimpleName()
                         + utils.makeSignature(element, null, true, true);
         // utils.makeSignature includes spaces
-        return HtmlId.of(a.replaceAll("\\s", ""));
+        return getHtmlId(a.replaceAll("\\s", ""));
     }
 
     /**
@@ -186,7 +187,7 @@ public class HtmlIds {
      * @return the id
      */
     HtmlId forMember(TypeElement typeElement, ExecutableElement member) {
-        return HtmlId.of(utils.getSimpleName(member) + utils.signature(member, typeElement));
+        return getHtmlId(utils.getSimpleName(member) + utils.signature(member, typeElement));
     }
 
     /**
@@ -204,7 +205,7 @@ public class HtmlIds {
      * @see #forProperty(ExecutableElement)
      */
     HtmlId forMember(VariableElement element) {
-        return HtmlId.of(element.getSimpleName().toString());
+        return getHtmlId(element.getSimpleName().toString());
     }
 
     /**
@@ -217,7 +218,7 @@ public class HtmlIds {
      * @return the id
      */
     HtmlId forMember(TypeElement typeElement, VariableElement member) {
-        return HtmlId.of(typeElement.getQualifiedName() + "." + member.getSimpleName());
+        return getHtmlId(typeElement.getQualifiedName() + "." + member.getSimpleName());
     }
 
     /**
@@ -277,7 +278,7 @@ public class HtmlIds {
             }
         }
         buf.append(")");
-        return foundTypeVariable ? HtmlId.of(buf.toString()) : null;
+        return foundTypeVariable ? getHtmlId(buf.toString()) : null;
     }
 
     /**
@@ -295,7 +296,22 @@ public class HtmlIds {
      * @see #forMember(VariableElement)
      */
     HtmlId forProperty(ExecutableElement element) {
-        return HtmlId.of(element.getSimpleName().toString());
+        return getHtmlId(element.getSimpleName().toString());
+    }
+
+    /**
+     * Returns an id for an element, suitable for use when the simple name
+     * will be unique within the page.
+     *
+     * <p>Warning: the name may not be unique if a field with the same
+     * name is also being documented in the same class.
+     *
+     * @param element the element
+     *
+     * @return the id
+     */
+    HtmlId forElement(Element element) {
+        return getHtmlId(element.getSimpleName().toString());
     }
 
     /**
@@ -309,7 +325,7 @@ public class HtmlIds {
      * @return the id
      */
     HtmlId forInheritedClasses(TypeElement element) {
-        return HtmlId.of(NESTED_CLASSES_INHERITANCE + utils.getFullyQualifiedName(element));
+        return getHtmlId(NESTED_CLASSES_INHERITANCE + utils.getFullyQualifiedName(element));
     }
 
     /**
@@ -359,7 +375,7 @@ public class HtmlIds {
     // Note: the use of {@code configuration} may not be strictly necessary as
     // compared to just using the fully qualified name, but would be a change in the value.
     private HtmlId forInherited(String prefix, TypeElement element) {
-        return HtmlId.of(prefix + configuration.getClassName(element));
+        return getHtmlId(prefix + configuration.getClassName(element));
     }
 
     /**
@@ -369,8 +385,8 @@ public class HtmlIds {
      *
      * @return the id
      */
-    static HtmlId forIndexChar(char character) {
-        return HtmlId.of("I:" + character);
+    HtmlId forIndexChar(char character) {
+        return getHtmlId("I:" + character);
     }
 
     /**
@@ -511,7 +527,77 @@ public class HtmlIds {
      * @return the id
      */
     public HtmlId forPage(Navigation.PageMode page) {
-        return HtmlId.of(page.name().toLowerCase(Locale.ROOT).replace("_", "-"));
+        return getHtmlId(page.name().toLowerCase(Locale.ROOT).replace("_", "-"));
+    }
+
+    /**
+     * Converts a name to a valid HTML name (id).
+     * This depends on the HTML version specified when the {@code Links} object was created.
+     *
+     * @param name the string that needs to be converted to a valid HTML name
+     * @return a valid HTML name
+     */
+    private String getValidHtmlName(String name) {
+        /* The HTML 4 spec at http://www.w3.org/TR/html4/types.html#h-6.2 mentions
+         * that the name/id should begin with a letter followed by other valid characters.
+         * The HTML 5 spec (draft) is more permissive on names/ids where the only restriction
+         * is that it should be at least one character long and should not contain spaces.
+         * The spec draft is @ http://www.w3.org/html/wg/drafts/html/master/dom.html#the-id-attribute.
+         *
+         * For HTML 4, we need to check for non-characters at the beginning of the name and
+         * substitute it accordingly, "_" and "$" can appear at the beginning of a member name.
+         * The method substitutes "$" with "Z:Z:D" and will prefix "_" with "Z:Z".
+         */
+
+        {
+            SourceVersion srcVer = configuration.docEnv.getSourceVersion();
+            if (SourceVersion.RELEASE_8 != srcVer && SourceVersion.RELEASE_9 != srcVer) {
+                return name;
+            }
+        }
+
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < name.length(); i++) {
+            char ch = name.charAt(i);
+            switch (ch) {
+                case '(':
+                case ')':
+                case '<':
+                case '>':
+                case ',':
+                    sb.append('-');
+                    break;
+                case ' ':
+                case '[':
+                    break;
+                case ']':
+                    sb.append(":A");
+                    break;
+                // Any appearance of $ needs to be substituted with ":D" and not with hyphen
+                // since a field name "P$$ and a method P(), both valid member names, can end
+                // up as "P--". A member name beginning with $ needs to be substituted with
+                // "Z:Z:D".
+                case '$':
+                    if (i == 0)
+                        sb.append("Z:Z");
+                    sb.append(":D");
+                    break;
+                // A member name beginning with _ needs to be prefixed with "Z:Z" since valid anchor
+                // names can only begin with a letter.
+                case '_':
+                    if (i == 0)
+                        sb.append("Z:Z");
+                    sb.append(ch);
+                    break;
+                default:
+                    sb.append(ch);
+            }
+        }
+        return sb.toString();
+    }
+
+    private HtmlId getHtmlId(String name) {
+        return HtmlId.of(getValidHtmlName(name));
     }
 
     /**

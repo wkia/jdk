@@ -366,7 +366,7 @@ public class TagletWriterImpl extends TagletWriter {
                     htmlWriter.pathToRoot.resolve(DocPaths.CONSTANT_VALUES);
             String whichConstant =
                     writer.getTypeElement().getQualifiedName() + "." +
-                    utils.getSimpleName(holder);
+                    writer.htmlIds.forElement(holder).name();
             DocLink link = constantsPath.fragment(whichConstant);
             links.add(htmlWriter.links.createLink(link,
                     contents.getContent("doclet.Constants_Summary")));
@@ -376,7 +376,7 @@ public class TagletWriterImpl extends TagletWriter {
             if (SerializedFormBuilder.serialInclude(utils, holder) &&
                       SerializedFormBuilder.serialInclude(utils, utils.containingPackage(holder))) {
                 DocPath serialPath = htmlWriter.pathToRoot.resolve(DocPaths.SERIALIZED_FORM);
-                DocLink link = serialPath.fragment(utils.getFullyQualifiedName(holder));
+                DocLink link = serialPath.fragment(htmlWriter.htmlIds.forClass((TypeElement)holder).name());
                 links.add(htmlWriter.links.createLink(link,
                         contents.getContent("doclet.Serialized_Form")));
             }

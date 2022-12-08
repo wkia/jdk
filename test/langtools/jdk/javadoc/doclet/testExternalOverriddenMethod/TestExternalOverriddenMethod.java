@@ -46,7 +46,6 @@ public class TestExternalOverriddenMethod extends JavadocTester {
     @Test
     public void test() {
         javadoc("-d", "out",
-                "-source","8",
                 "-sourcepath", testSrc,
                 "-linkoffline", uri, testSrc,
                 "pkg");

@@ -162,7 +162,7 @@ public class IndexWriter extends HtmlDocletWriter {
     protected void addHeading(char ch, Content content) {
         Content headContent = Text.of(String.valueOf(ch));
         var heading = HtmlTree.HEADING(Headings.CONTENT_HEADING, HtmlStyle.title, headContent)
-                .setId(HtmlIds.forIndexChar(ch));
+                .setId(htmlIds.forIndexChar(ch));
         content.add(heading);
     }
 
@@ -349,7 +349,7 @@ public class IndexWriter extends HtmlDocletWriter {
             Content label = Text.of(Character.toString(ch));
             Content link = splitIndex
                     ? links.createLink(DocPaths.indexN(iter.nextIndex()), label)
-                    : links.createLink(HtmlIds.forIndexChar(ch), label);
+                    : links.createLink(htmlIds.forIndexChar(ch), label);
             content.add(link);
             content.add(Entity.NO_BREAK_SPACE);
         }

@@ -46,7 +46,6 @@ public class TestClassCrossReferences extends JavadocTester {
     @Test
     public void test() {
         javadoc("-d", "out",
-                "-source", "8",
                 "-Xdoclint:none",
                 "-sourcepath", testSrc,
                 "-linkoffline", uri, testSrc,

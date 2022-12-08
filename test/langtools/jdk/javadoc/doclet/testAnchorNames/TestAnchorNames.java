@@ -23,7 +23,7 @@
 
 /*
  * @test
- * @bug 8025633 8025524 8081854 8187521 8182765 8261976
+ * @bug 8025633 8025524 8081854 8187521 8182765 8261976 8297437
  * @summary Test for valid name attribute in HTML anchors.
  * @library /tools/lib ../../lib
  * @modules jdk.javadoc/jdk.javadoc.internal.tool
@@ -51,8 +51,8 @@ public class TestAnchorNames extends JavadocTester {
     }
 
     @Test
-    public void testHtml5(Path ignore) {
-        javadoc("-d", "out-html5",
+    public void testHtml4_jdk8(Path ignore) {
+        javadoc("-d", "out-html4-jdk8",
                 "-sourcepath", testSrc,
                 "-source", "8", //so that '_' can be used as an identifier
                 "-use",
@@ -91,8 +91,154 @@ public class TestAnchorNames extends JavadocTester {
 
         // Test some fields
         checkOutput("pkg1/RegClass.html", true,
-                "<section class=\"detail\" id=\"_\">",
-                "<a href=\"#_\" class=\"member-name-link\">",
+                "<section class=\"detail\" id=\"Z:Z_\">",
+                "<a href=\"#Z:Z_\" class=\"member-name-link\">",
+                "<section class=\"detail\" id=\"Z:Z_:D\">",
+                "<a href=\"#Z:Z_:D\" class=\"member-name-link\">",
+                "<section class=\"detail\" id=\"Z:Z:D_\">",
+                "<a href=\"#Z:Z:D_\" class=\"member-name-link\">",
+                """
+                    <section class="detail" id="Z:Z:Dfield">""",
+                "<a href=\"#Z:Z:Dfield\" class=\"member-name-link\">",
+                """
+                    <section class="detail" id="fieldInCla:D:D">""",
+                "<a href=\"#fieldInCla:D:D\" class=\"member-name-link\">",
+                """
+                    <section class="detail" id="S_:D:D:D:D:DINT">""",
+                "<a href=\"#S_:D:D:D:D:DINT\" class=\"member-name-link\">",
+                """
+                    <section class="detail" id="method:D:D">""",
+                "<a href=\"#method:D:D\" class=\"member-name-link\">");
+
+        checkOutput("pkg1/DeprMemClass.html", true,
+                """
+                    <section class="detail" id="Z:Z_field_In_Class">""",
+                "<a href=\"#Z:Z_field_In_Class\" class=\"member-name-link\">");
+
+        // Test constructor
+        checkOutput("pkg1/RegClass.html", true,
+                """
+                    <section class="detail" id="-init--java.lang.String-int-">""",
+                """
+                    <a href="#-init--java.lang.String-int-" class="member-name-link">""");
+
+        // Test some methods
+        checkOutput("pkg1/RegClass.html", true,
+                """
+                    <section class="detail" id="Z:Z_methodInClass-java.lang.String-">""",
+                """
+                    <a href="#Z:Z_methodInClass-java.lang.String-" class="member-name-link">""",
+                """
+                    <section class="detail" id="method--">""",
+                "<a href=\"#method--\" class=\"member-name-link\">",
+                """
+                    <section class="detail" id="foo-java.util.Map-">""",
+                "<a href=\"#foo-java.util.Map-\" class=\"member-name-link\">",
+                """
+                    <section class="detail" id="methodInCla:Ds-java.lang.String:A-">""",
+                """
+                    <a href="#methodInCla:Ds-java.lang.String:A-" class="member-name-link">""",
+                """
+                    <section class="detail" id="Z:Z_methodInClas:D-java.lang.String-int-">""",
+                """
+                    <a href="#Z:Z_methodInClas:D-java.lang.String-int-" class="member-name-link">""",
+                """
+                    <section class="detail" id="methodD-pkg1.RegClass.:DA-">""",
+                """
+                    <a href="#methodD-pkg1.RegClass.:DA-" class="member-name-link">""",
+                """
+                    <section class="detail" id="methodD-pkg1.RegClass.D:A-">""",
+                """
+                    <a href="#methodD-pkg1.RegClass.D:A-" class="member-name-link">""");
+
+        checkOutput("pkg1/DeprMemClass.html", true,
+                """
+                    <section class="detail" id="Z:Z:Dmethod_In_Class--">""",
+                "<a href=\"#Z:Z:Dmethod_In_Class--\" class=\"member-name-link\">");
+
+        // Test enum
+        checkOutput("pkg1/RegClass.Te$t_Enum.html", true,
+                """
+                    <section class="detail" id="Z:Z:DFLD2">""",
+                "<a href=\"#Z:Z:DFLD2\" class=\"member-name-link\">");
+
+        // Test nested class
+        checkOutput("pkg1/RegClass._NestedClas$.html", true,
+                """
+                    <section class="detail" id="-init---">""",
+                "<a href=\"#-init---\" class=\"member-name-link\">");
+
+        // Test class use page
+        checkOutput("pkg1/class-use/DeprMemClass.html", true,
+                """
+                    <a href="../RegClass.html#d____mc" class="member-name-link">""");
+
+        // Test deprecated list page
+        checkOutput("deprecated-list.html", true,
+                """
+                    <a href="pkg1/DeprMemClass.html#Z:Z_field_In_Class">""",
+                """
+                    <a href="pkg1/DeprMemClass.html#Z:Z:Dmethod_In_Class--">""");
+
+        // Test constant values page
+        checkOutput("constant-values.html", true,
+                """
+                    <a href="pkg1/RegClass.html#S_:D:D:D:D:DINT">""");
+
+        // Test serialized form page
+        checkOutput("serialized-form.html", true,
+                //This is the marker for the link that appears in the pkg1.RegClass.html page
+                """
+                    <section class="serialized-class-details" id="pkg1.RegClass">""");
+
+        // Test member name index page
+        checkOutput("index-all.html", true,
+                """
+                    <h2 class="title" id="I::D">$</h2>""",
+                "<a href=\"#I::D\">$",
+                "<a href=\"#I:_\">_");
+    }
+
+    @Test
+    public void testHtml5(Path ignore) {
+        javadoc("-d", "out-html5",
+                "-sourcepath", testSrc,
+                "-use",
+                "pkg2");
+        checkExit(Exit.OK);
+
+        // Test some section markers and links to these markers
+        checkOutput("pkg2/RegClass.html", true,
+                """
+                    <span class="skip-nav" id="skip-navbar-top">""",
+                """
+                    <a href="#skip-navbar-top" title="Skip navigation links">""",
+                """
+                    <section class="nested-class-summary" id="nested-class-summary">
+                    <h2>Nested Class Summary</h2>""",
+                "<a href=\"#nested-class-summary\">",
+                """
+                    <section class="method-summary" id="method-summary">
+                    <h2>Method Summary</h2>""",
+                "<a href=\"#method-summary\">",
+                """
+                    <section class="field-details" id="field-detail">
+                    <h2>Field Details</h2>""",
+                "<a href=\"#field-detail\">",
+                """
+                    <section class="constructor-details" id="constructor-detail">
+                    <h2>Constructor Details</h2>""",
+                "<a href=\"#constructor-detail\">");
+
+        // Test some members and link to these members
+        checkOutput("pkg2/RegClass.html", true,
+                //The marker for this appears in the serialized-form.html which we will
+                //test below
+                """
+                    <a href="../serialized-form.html#pkg2.RegClass">""");
+
+        // Test some fields
+        checkOutput("pkg2/RegClass.html", true,
                 "<section class=\"detail\" id=\"_$\">",
                 "<a href=\"#_$\" class=\"member-name-link\">",
                 "<section class=\"detail\" id=\"$_\">",
@@ -110,20 +256,20 @@ public class TestAnchorNames extends JavadocTester {
                     <section class="detail" id="method$$">""",
                 "<a href=\"#method$$\" class=\"member-name-link\">");
 
-        checkOutput("pkg1/DeprMemClass.html", true,
+        checkOutput("pkg2/DeprMemClass.html", true,
                 """
                     <section class="detail" id="_field_In_Class">""",
                 "<a href=\"#_field_In_Class\" class=\"member-name-link\">");
 
         // Test constructor
-        checkOutput("pkg1/RegClass.html", true,
+        checkOutput("pkg2/RegClass.html", true,
                 """
                     <section class="detail" id="&lt;init&gt;(java.lang.String,int)">""",
                 """
                     <a href="#%3Cinit%3E(java.lang.String,int)" class="member-name-link">""");
 
         // Test some methods
-        checkOutput("pkg1/RegClass.html", true,
+        checkOutput("pkg2/RegClass.html", true,
                 """
                     <section class="detail" id="_methodInClass(java.lang.String)">""",
                 """
@@ -143,53 +289,53 @@ public class TestAnchorNames extends JavadocTester {
                 """
                     <a href="#_methodInClas$(java.lang.String,int)" class="member-name-link">""",
                 """
-                    <section class="detail" id="methodD(pkg1.RegClass.$A)">""",
+                    <section class="detail" id="methodD(pkg2.RegClass.$A)">""",
                 """
-                    <a href="#methodD(pkg1.RegClass.$A)" class="member-name-link">""",
+                    <a href="#methodD(pkg2.RegClass.$A)" class="member-name-link">""",
                 """
-                    <section class="detail" id="methodD(pkg1.RegClass.D[])">""",
+                    <section class="detail" id="methodD(pkg2.RegClass.D[])">""",
                 """
-                    <a href="#methodD(pkg1.RegClass.D%5B%5D)" class="member-name-link">""");
+                    <a href="#methodD(pkg2.RegClass.D%5B%5D)" class="member-name-link">""");
 
-        checkOutput("pkg1/DeprMemClass.html", true,
+        checkOutput("pkg2/DeprMemClass.html", true,
                 """
                     <section class="detail" id="$method_In_Class()">""",
                 "<a href=\"#$method_In_Class()\" class=\"member-name-link\">");
 
         // Test enum
-        checkOutput("pkg1/RegClass.Te$t_Enum.html", true,
+        checkOutput("pkg2/RegClass.Te$t_Enum.html", true,
                 """
                     <section class="detail" id="$FLD2">""",
                 "<a href=\"#$FLD2\" class=\"member-name-link\">");
 
         // Test nested class
-        checkOutput("pkg1/RegClass._NestedClas$.html", true,
+        checkOutput("pkg2/RegClass._NestedClas$.html", true,
                 """
                     <section class="detail" id="&lt;init&gt;()">""",
                 "<a href=\"#%3Cinit%3E()\" class=\"member-name-link\">");
 
         // Test class use page
-        checkOutput("pkg1/class-use/DeprMemClass.html", true,
+        checkOutput("pkg2/class-use/DeprMemClass.html", true,
                 """
                     <a href="../RegClass.html#d____mc" class="member-name-link">""");
 
         // Test deprecated list page
         checkOutput("deprecated-list.html", true,
                 """
-                    <a href="pkg1/DeprMemClass.html#_field_In_Class">""",
+                    <a href="pkg2/DeprMemClass.html#_field_In_Class">""",
                 """
-                    <a href="pkg1/DeprMemClass.html#$method_In_Class()">""");
+                    <a href="pkg2/DeprMemClass.html#$method_In_Class()">""");
 
         // Test constant values page
         checkOutput("constant-values.html", true,
                 """
-                    <a href="pkg1/RegClass.html#S_$$$$$INT">""");
+                    <a href="pkg2/RegClass.html#S_$$$$$INT">""");
 
         // Test serialized form page
         checkOutput("serialized-form.html", true,
-                //This is the marker for the link that appears in the pkg1.RegClass.html page
+                //This is the marker for the link that appears in the pkg2.RegClass.html page
                 """
-                    <section class="serialized-class-details" id="pkg1.RegClass">""");
+                    <section class="serialized-class-details" id="pkg2.RegClass">""");
 
         // Test member name index page
         checkOutput("index-all.html", true,
