@@ -145,6 +145,15 @@ dbgsysSocket(int domain, int type, int protocol) {
 }
 
 int dbgsysSocketClose(int fd) {
+    struct linger l;
+    socklen_t len = sizeof(l);
+
+    if (getsockopt(fd, SOL_SOCKET, SO_LINGER, (char *)&l, &len) == 0) {
+        if (l.l_onoff == 0) {
+            shutdown(fd, SHUT_RDWR);
+        }
+    }
+
     int rv;
 
     /* AIX recommends to repeat the close call on EINTR */
